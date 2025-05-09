@@ -11,8 +11,8 @@ namespace OnlineCourse.Service
 {
     public interface ICourseCategoryService
     {
-        Task<CourseCategoryModel?> GetByIdAsync(int id);
-        Task<List<CourseCategoryModel>> GetAllCourseAsync();
+        Task<CourseCategoryDto?> GetByIdAsync(int id);
+        Task<List<CourseCategoryDto>> GetAllCourseAsync();
     }
 
     public class CourseCategoryService : ICourseCategoryService
@@ -23,10 +23,10 @@ namespace OnlineCourse.Service
         {
             this.coursecategoryRepository = coursecategoryRepository;
         }
-        public async Task<List<CourseCategoryModel>> GetAllCourseAsync()
+        public async Task<List<CourseCategoryDto>> GetAllCourseAsync()
         {
             var course = await coursecategoryRepository.GetAllCourse();
-            var courses = course.Select(x => new CourseCategoryModel()
+            var courses = course.Select(x => new CourseCategoryDto()
             {
                 CategoryId = x.CategoryId,
                 CategoryName = x.CategoryName,
@@ -35,10 +35,10 @@ namespace OnlineCourse.Service
             return courses;
         }
 
-        public async Task<CourseCategoryModel?> GetByIdAsync(int id)
+        public async Task<CourseCategoryDto?> GetByIdAsync(int id)
         {
             var course = await coursecategoryRepository.GetByIdAsync(id);
-            return new CourseCategoryModel() { 
+            return course == null? null : new CourseCategoryDto() { 
                 CategoryId = course.CategoryId,
                 CategoryName = course.CategoryName,
                 Description = course.Description

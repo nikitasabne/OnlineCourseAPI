@@ -15,7 +15,7 @@ namespace OnlineCourse.Data
 
     public interface ICourseCategoryRepository
     {
-        Task<CourseCategory> GetByIdAsync(int id);
         Task<List<CourseCategory>> GetAllCourse();
+        Task<CourseCategory> GetByIdAsync(int id);
     }
 }

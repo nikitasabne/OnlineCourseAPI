@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OnlineCourse.Core.Models
 {
-     public class CourseCategoryModel
+     public class CourseCategoryDto
     {
         public int CategoryId { get; set; }
 
