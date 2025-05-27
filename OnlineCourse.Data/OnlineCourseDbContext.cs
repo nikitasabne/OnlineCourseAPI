@@ -40,7 +40,8 @@ public partial class OnlineCourseDbContext : DbContext
     public virtual DbSet<VideoRequest> VideoRequests { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=MyDbConnection");
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=NIKITAS\\SQLEXPRESS;Database=OnlineCourseDB;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,11 +49,23 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.CourseId).HasName("PK_Course_CourseId");
 
+            entity.ToTable("Course");
+
+            entity.Property(e => e.CourseType).HasMaxLength(10);
+            entity.Property(e => e.Duration).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.Thumbnail).HasMaxLength(500);
+            entity.Property(e => e.Title).HasMaxLength(100);
+
             entity.HasOne(d => d.Category).WithMany(p => p.Courses)
+                .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Course_CourseCategory");
 
             entity.HasOne(d => d.Instructor).WithMany(p => p.Courses)
+                .HasForeignKey(d => d.InstructorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Course_Instructor");
         });
@@ -60,19 +73,31 @@ public partial class OnlineCourseDbContext : DbContext
         modelBuilder.Entity<CourseCategory>(entity =>
         {
             entity.HasKey(e => e.CategoryId).HasName("PK_CourseCategory_CategoryId");
+
+            entity.ToTable("CourseCategory");
+
+            entity.Property(e => e.CategoryName).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(250);
         });
 
         modelBuilder.Entity<Enrollment>(entity =>
         {
             entity.HasKey(e => e.EnrollmentId).HasName("PK_Enrollment_EnrollmentId");
 
-            entity.Property(e => e.EnrollmentDate).HasDefaultValueSql("(getdate())");
+            entity.ToTable("Enrollment");
+
+            entity.Property(e => e.EnrollmentDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.PaymentStatus).HasMaxLength(20);
 
             entity.HasOne(d => d.Course).WithMany(p => p.Enrollments)
+                .HasForeignKey(d => d.CourseId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Enrollment_Course");
 
             entity.HasOne(d => d.User).WithMany(p => p.Enrollments)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Enrollment_UserProfile");
         });
@@ -81,7 +106,14 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.InstructorId).HasName("PK_Instructor_InstructorId");
 
+            entity.ToTable("Instructor");
+
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.FirstName).HasMaxLength(50);
+            entity.Property(e => e.LastName).HasMaxLength(50);
+
             entity.HasOne(d => d.User).WithMany(p => p.Instructors)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Instructor_UserProfile");
         });
@@ -90,9 +122,17 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.PaymentId).HasName("PK_Payment_PaymentId");
 
-            entity.Property(e => e.PaymentDate).HasDefaultValueSql("(getdate())");
+            entity.ToTable("Payment");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PaymentDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.PaymentStatus).HasMaxLength(20);
 
             entity.HasOne(d => d.Enrollment).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.EnrollmentId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Payment_Enrollment");
         });
@@ -101,13 +141,19 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.ReviewId).HasName("PK_Review_ReviewId");
 
-            entity.Property(e => e.ReviewDate).HasDefaultValueSql("(getdate())");
+            entity.ToTable("Review");
+
+            entity.Property(e => e.ReviewDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
 
             entity.HasOne(d => d.Course).WithMany(p => p.Reviews)
+                .HasForeignKey(d => d.CourseId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Review_Course");
 
             entity.HasOne(d => d.User).WithMany(p => p.Reviews)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Review_UserProfile");
         });
@@ -115,13 +161,19 @@ public partial class OnlineCourseDbContext : DbContext
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.RoleId).HasName("PK_Roles_RoleId");
+
+            entity.Property(e => e.RoleName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<SessionDetail>(entity =>
         {
             entity.HasKey(e => e.SessionId).HasName("PK_SessionDetails_SessionId");
 
+            entity.Property(e => e.Title).HasMaxLength(100);
+            entity.Property(e => e.VideoUrl).HasMaxLength(500);
+
             entity.HasOne(d => d.Course).WithMany(p => p.SessionDetails)
+                .HasForeignKey(d => d.CourseId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SessionDetails_Course");
         });
@@ -129,28 +181,46 @@ public partial class OnlineCourseDbContext : DbContext
         modelBuilder.Entity<SmartApp>(entity =>
         {
             entity.HasKey(e => e.SmartAppId).HasName("PK_SmartApp_SmartAppId");
+
+            entity.ToTable("SmartApp");
+
+            entity.Property(e => e.AppName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<UserProfile>(entity =>
         {
             entity.HasKey(e => e.UserId).HasName("PK_UserProfile_UserId");
 
-            entity.Property(e => e.DisplayName).HasDefaultValue("Guest");
+            entity.ToTable("UserProfile");
+
+            entity.Property(e => e.AdObjId).HasMaxLength(128);
+            entity.Property(e => e.DisplayName)
+                .HasMaxLength(100)
+                .HasDefaultValue("Guest");
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.FirstName).HasMaxLength(50);
+            entity.Property(e => e.LastName).HasMaxLength(50);
+            entity.Property(e => e.ProfilePictureUrl).HasMaxLength(500);
         });
 
         modelBuilder.Entity<UserRole>(entity =>
         {
             entity.HasKey(e => e.UserRoleId).HasName("PK_UserRole_UserRoleId");
 
+            entity.ToTable("UserRole");
+
             entity.HasOne(d => d.Role).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_Roles");
 
             entity.HasOne(d => d.SmartApp).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.SmartAppId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_SmartApp");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_UserProfile");
         });
@@ -159,7 +229,17 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.VideoRequestId).HasName("PK_VideoRequest_VideoRequestId");
 
+            entity.ToTable("VideoRequest");
+
+            entity.Property(e => e.RequestDescription).HasMaxLength(4000);
+            entity.Property(e => e.Response).HasMaxLength(4000);
+            entity.Property(e => e.ShortTitle).HasMaxLength(200);
+            entity.Property(e => e.SubTopic).HasMaxLength(50);
+            entity.Property(e => e.Topic).HasMaxLength(50);
+            entity.Property(e => e.VideoUrls).HasMaxLength(2000);
+
             entity.HasOne(d => d.User).WithMany(p => p.VideoRequests)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VideoRequest_UserProfile");
         });

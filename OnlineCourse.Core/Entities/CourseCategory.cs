@@ -1,5 +1,4 @@
-﻿using OnlineCourse.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace OnlineCourse.Core.Entities;
@@ -13,9 +12,4 @@ public partial class CourseCategory
     public string? Description { get; set; }
 
     public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
-
-    public static implicit operator CourseCategory(CourseCategoryDto v)
-    {
-        throw new NotImplementedException();
-    }
 }
