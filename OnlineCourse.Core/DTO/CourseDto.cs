@@ -1,4 +1,5 @@
 ﻿using OnlineCourse.Core.Entities;
+using OnlineCourse.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace OnlineCourse.Core.DTO
         //public string? Thumbnail { get; set; }
         //public int InstructorUserId { get; set; }
 
-        public virtual CourseCategory Category { get; set; } = null!;
+        public virtual CourseCategoryDto Category { get; set; } = null!;
 
         public UserRatingDto UserRating { get; set; }
     }

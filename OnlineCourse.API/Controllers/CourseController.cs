@@ -30,7 +30,7 @@ namespace OnlineCourse.API.Controllers
             return Ok(course);
         }
 
-        [HttpGet("Detail/{courseid}")]
+        [HttpGet("Detail/{courseId}")]
         public async Task<ActionResult<CourseDetailDto>> GetAllCourseDetailByCourseIdAsync([FromRoute] int courseId)
         {
             var courseDetail = await courseService.GetCourseDetailAsync(courseId);

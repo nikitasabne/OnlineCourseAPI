@@ -31,12 +31,17 @@ public partial class OnlineCourseDbContext : DbContext
 
     public virtual DbSet<SessionDetail> SessionDetails { get; set; }
 
+    public virtual DbSet<SmartApp> SmartApps { get; set; }
+
     public virtual DbSet<UserProfile> UserProfiles { get; set; }
 
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
+    public virtual DbSet<VideoRequest> VideoRequests { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=MyDbConnection");
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=NIKITAS\\SQLEXPRESS;Database=OnlineCourseDB;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +56,7 @@ public partial class OnlineCourseDbContext : DbContext
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.Thumbnail).HasMaxLength(500);
             entity.Property(e => e.Title).HasMaxLength(100);
 
             entity.HasOne(d => d.Category).WithMany(p => p.Courses)
@@ -156,9 +162,7 @@ public partial class OnlineCourseDbContext : DbContext
         {
             entity.HasKey(e => e.RoleId).HasName("PK_Roles_RoleId");
 
-            entity.Property(e => e.RoleName)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.RoleName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<SessionDetail>(entity =>
@@ -174,28 +178,29 @@ public partial class OnlineCourseDbContext : DbContext
                 .HasConstraintName("FK_SessionDetails_Course");
         });
 
+        modelBuilder.Entity<SmartApp>(entity =>
+        {
+            entity.HasKey(e => e.SmartAppId).HasName("PK_SmartApp_SmartAppId");
+
+            entity.ToTable("SmartApp");
+
+            entity.Property(e => e.AppName).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<UserProfile>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK_UserProfile_UserID");
+            entity.HasKey(e => e.UserId).HasName("PK_UserProfile_UserId");
 
             entity.ToTable("UserProfile");
 
-            entity.Property(e => e.AddObjId)
-                .HasMaxLength(100)
-                .IsUnicode(false);
+            entity.Property(e => e.AdObjId).HasMaxLength(128);
             entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
-                .IsUnicode(false)
                 .HasDefaultValue("Guest");
-            entity.Property(e => e.Email)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.LastName)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.FirstName).HasMaxLength(50);
+            entity.Property(e => e.LastName).HasMaxLength(50);
+            entity.Property(e => e.ProfilePictureUrl).HasMaxLength(500);
         });
 
         modelBuilder.Entity<UserRole>(entity =>
@@ -209,10 +214,34 @@ public partial class OnlineCourseDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_Roles");
 
+            entity.HasOne(d => d.SmartApp).WithMany(p => p.UserRoles)
+                .HasForeignKey(d => d.SmartAppId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserRole_SmartApp");
+
             entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_UserProfile");
+        });
+
+        modelBuilder.Entity<VideoRequest>(entity =>
+        {
+            entity.HasKey(e => e.VideoRequestId).HasName("PK_VideoRequest_VideoRequestId");
+
+            entity.ToTable("VideoRequest");
+
+            entity.Property(e => e.RequestDescription).HasMaxLength(4000);
+            entity.Property(e => e.Response).HasMaxLength(4000);
+            entity.Property(e => e.ShortTitle).HasMaxLength(200);
+            entity.Property(e => e.SubTopic).HasMaxLength(50);
+            entity.Property(e => e.Topic).HasMaxLength(50);
+            entity.Property(e => e.VideoUrls).HasMaxLength(2000);
+
+            entity.HasOne(d => d.User).WithMany(p => p.VideoRequests)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_VideoRequest_UserProfile");
         });
 
         OnModelCreatingPartial(modelBuilder);
